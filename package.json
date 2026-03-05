@@ -1,0 +1,269 @@
+{
+  "name": "symfony-explorer",
+  "displayName": "Symfony Explorer",
+  "description": "View Symfony/EC-CUBE routes, entities, and migrations in the sidebar",
+  "version": "0.2.0",
+  "publisher": "mytools",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:composer.json",
+    "onView:symfonyRoutesView",
+    "onView:symfonyEntitiesView",
+    "onView:symfonyMigrationsView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "symfonyRoutesContainer",
+          "title": "Symfony",
+          "icon": "media/symfony-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "symfonyRoutesContainer": [
+        {
+          "id": "symfonyRoutesView",
+          "name": "Routes"
+        },
+        {
+          "id": "symfonyEntitiesView",
+          "name": "Entities"
+        },
+        {
+          "id": "symfonyMigrationsView",
+          "name": "Migrations"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "symfony-routes.refresh",
+        "title": "Refresh Routes",
+        "category": "Symfony",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "symfony-routes.openController",
+        "title": "Open Controller",
+        "category": "Symfony",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "symfony-routes.openTwig",
+        "title": "Open Template",
+        "category": "Symfony",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "symfony-routes.refreshEntities",
+        "title": "Refresh Entities",
+        "category": "Symfony",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "symfony-routes.openEntity",
+        "title": "Open Entity",
+        "category": "Symfony",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "symfony-routes.refreshMigrations",
+        "title": "Refresh Migrations",
+        "category": "Symfony",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "symfony-routes.generateMigration",
+        "title": "Generate Migration",
+        "category": "Symfony",
+        "icon": "$(add)"
+      },
+      {
+        "command": "symfony-routes.openMigration",
+        "title": "Open Migration",
+        "category": "Symfony",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "symfony-routes.setRouteGroupDepth",
+        "title": "Group Routes by Path Depth",
+        "category": "Symfony",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "symfony-routes.searchRoutes",
+        "title": "Search Routes",
+        "category": "Symfony",
+        "icon": "$(search)"
+      },
+      {
+        "command": "symfony-routes.clearSearchRoutes",
+        "title": "Clear Route Search",
+        "category": "Symfony",
+        "icon": "$(close)"
+      },
+      {
+        "command": "symfony-routes.searchEntities",
+        "title": "Search Entities",
+        "category": "Symfony",
+        "icon": "$(search)"
+      },
+      {
+        "command": "symfony-routes.clearSearchEntities",
+        "title": "Clear Entity Search",
+        "category": "Symfony",
+        "icon": "$(close)"
+      },
+      {
+        "command": "symfony-routes.searchMigrations",
+        "title": "Search Migrations",
+        "category": "Symfony",
+        "icon": "$(search)"
+      },
+      {
+        "command": "symfony-routes.clearSearchMigrations",
+        "title": "Clear Migration Search",
+        "category": "Symfony",
+        "icon": "$(close)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "symfony-routes.clearSearchRoutes",
+          "when": "view == symfonyRoutesView && symfonyRoutes.filterActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "symfony-routes.searchRoutes",
+          "when": "view == symfonyRoutesView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "symfony-routes.setRouteGroupDepth",
+          "when": "view == symfonyRoutesView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "symfony-routes.refresh",
+          "when": "view == symfonyRoutesView",
+          "group": "navigation@4"
+        },
+        {
+          "command": "symfony-routes.clearSearchEntities",
+          "when": "view == symfonyEntitiesView && symfonyEntities.filterActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "symfony-routes.searchEntities",
+          "when": "view == symfonyEntitiesView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "symfony-routes.refreshEntities",
+          "when": "view == symfonyEntitiesView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "symfony-routes.clearSearchMigrations",
+          "when": "view == symfonyMigrationsView && symfonyMigrations.filterActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "symfony-routes.searchMigrations",
+          "when": "view == symfonyMigrationsView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "symfony-routes.generateMigration",
+          "when": "view == symfonyMigrationsView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "symfony-routes.refreshMigrations",
+          "when": "view == symfonyMigrationsView",
+          "group": "navigation@4"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "symfony-routes.openController",
+          "when": "view == symfonyRoutesView && viewItem == routeController",
+          "group": "inline"
+        },
+        {
+          "command": "symfony-routes.openTwig",
+          "when": "view == symfonyRoutesView && viewItem == routeTemplate",
+          "group": "inline"
+        },
+        {
+          "command": "symfony-routes.openEntity",
+          "when": "view == symfonyEntitiesView && viewItem == entity",
+          "group": "inline"
+        },
+        {
+          "command": "symfony-routes.openMigration",
+          "when": "view == symfonyMigrationsView && viewItem == migration",
+          "group": "inline"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Symfony Explorer",
+      "properties": {
+        "symfony-routes.phpPath": {
+          "type": "string",
+          "default": "php",
+          "description": "Path to the PHP executable (ignored when useDocker is true)"
+        },
+        "symfony-routes.consolePath": {
+          "type": "string",
+          "default": "bin/console",
+          "description": "Path to the Symfony console, relative to the project root"
+        },
+        "symfony-routes.useDocker": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run bin/console via docker compose exec"
+        },
+        "symfony-routes.dockerService": {
+          "type": "string",
+          "default": "app",
+          "description": "Docker Compose service name for the PHP container"
+        },
+        "symfony-routes.dockerWorkdir": {
+          "type": "string",
+          "default": "/var/www/html",
+          "description": "Working directory inside the Docker container where the Symfony project lives"
+        },
+        "symfony-routes.routeGroupDepth": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Group routes by path segment depth (0 = no grouping, 1 = first segment, 2 = first two segments, etc.)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js --production",
+    "watch": "node esbuild.js --watch",
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.3.0"
+  }
+}
