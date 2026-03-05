@@ -1,0 +1,13 @@
+node_modules/
+out/
+*.vsix
+*.map
+.vscode-test/
+.vscode/
+*.tgz
+.DS_Store
+Thumbs.db
+*.log
+*.env
+*.env.*
+.cursor/
