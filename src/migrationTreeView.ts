@@ -43,11 +43,16 @@ export class MigrationTreeItem extends vscode.TreeItem {
   }
 }
 
-/** A leaf item showing migration detail (description or table name). */
+/** A leaf item showing migration detail (description or table name) with jump-to-line support. */
 export class MigrationDetailItem extends vscode.TreeItem {
-  constructor(label: string, icon: vscode.ThemeIcon) {
+  constructor(label: string, icon: vscode.ThemeIcon, filePath: string, searchKeyword: string) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.iconPath = icon;
+    this.command = {
+      command: "symfony-routes.openMigrationDetail",
+      title: "Jump to Detail",
+      arguments: [filePath, searchKeyword],
+    };
   }
 }
 
@@ -126,11 +131,19 @@ export class MigrationTreeViewProvider implements vscode.TreeDataProvider<vscode
     if (element instanceof MigrationTreeItem) {
       const items: vscode.TreeItem[] = [];
       const m = element.migration;
-      if (m.description) {
-        items.push(new MigrationDetailItem(m.description, new vscode.ThemeIcon("note")));
+      if (m.description && m.filePath) {
+        items.push(new MigrationDetailItem(
+          m.description, new vscode.ThemeIcon("note"),
+          m.filePath, "getDescription"
+        ));
       }
-      for (const table of m.tables) {
-        items.push(new MigrationDetailItem(table, new vscode.ThemeIcon("database")));
+      if (m.filePath) {
+        for (const table of m.tables) {
+          items.push(new MigrationDetailItem(
+            table, new vscode.ThemeIcon("database"),
+            m.filePath, table
+          ));
+        }
       }
       return items;
     }

@@ -80,6 +80,33 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
     ),
+    vscode.commands.registerCommand(
+      "symfony-routes.openMigrationDetail",
+      async (filePath: string, searchKeyword: string) => {
+        const doc = await vscode.workspace.openTextDocument(filePath);
+        const editor = await vscode.window.showTextDocument(doc);
+        const text = doc.getText();
+        let idx = -1;
+        if (searchKeyword === "getDescription") {
+          idx = text.indexOf(searchKeyword);
+        } else {
+          const lines = text.split("\n");
+          let offset = 0;
+          for (const line of lines) {
+            if (line.includes("addSql") && line.includes(searchKeyword)) {
+              idx = offset + line.indexOf(searchKeyword);
+              break;
+            }
+            offset += line.length + 1;
+          }
+        }
+        if (idx >= 0) {
+          const pos = doc.positionAt(idx);
+          editor.selection = new vscode.Selection(pos, pos);
+          editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+        }
+      }
+    ),
     vscode.commands.registerCommand("symfony-routes.generateMigration", async () => {
       const filePath = migrationProvider.generateMigration();
       if (!filePath) {
