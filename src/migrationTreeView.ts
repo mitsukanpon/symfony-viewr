@@ -85,7 +85,8 @@ export class MigrationTreeViewProvider implements vscode.TreeDataProvider<vscode
           const lower = this._filterText.toLowerCase();
           return (
             m.version.toLowerCase().includes(lower) ||
-            m.description.toLowerCase().includes(lower)
+            m.description.toLowerCase().includes(lower) ||
+            m.tables.some((t) => t.toLowerCase().includes(lower))
           );
         })
       : this.cachedMigrations;

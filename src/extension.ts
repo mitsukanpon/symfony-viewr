@@ -188,9 +188,9 @@ export function activate(context: vscode.ExtensionContext) {
     // --- Search: Migrations ---
     vscode.commands.registerCommand("symfony-routes.searchMigrations", async () => {
       const input = await vscode.window.showInputBox({
-        prompt: "Search migrations (version / description)",
+        prompt: "Search migrations (version / description / table)",
         value: migrationTreeView.filterText,
-        placeHolder: "e.g. 20240101, Version",
+        placeHolder: "e.g. 20240101, Version, dtb_product",
       });
       if (input !== undefined) {
         migrationTreeView.setFilter(input);
