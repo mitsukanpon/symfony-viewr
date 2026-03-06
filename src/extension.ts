@@ -43,6 +43,7 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     vscode.window.createTreeView("symfonyMigrationsView", {
       treeDataProvider: migrationTreeView,
+      showCollapseAll: true,
     }),
 
     // --- Route commands ---

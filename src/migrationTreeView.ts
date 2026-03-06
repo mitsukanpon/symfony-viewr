@@ -22,8 +22,11 @@ const STATUS_LABELS: Record<MigrationStatus, string> = {
 /** A tree item representing a single migration version. */
 export class MigrationTreeItem extends vscode.TreeItem {
   constructor(public readonly migration: MigrationDefinition) {
-    const desc = migration.description ? ` — ${migration.description}` : "";
-    super(`${migration.version}${desc}`, vscode.TreeItemCollapsibleState.None);
+    const hasChildren = !!migration.description || migration.tables.length > 0;
+    const state = hasChildren
+      ? vscode.TreeItemCollapsibleState.Collapsed
+      : vscode.TreeItemCollapsibleState.None;
+    super(migration.version, state);
 
     this.iconPath = STATUS_ICONS[migration.status];
     this.tooltip = `${migration.version}\nStatus: ${STATUS_LABELS[migration.status]}`;
@@ -37,6 +40,14 @@ export class MigrationTreeItem extends vscode.TreeItem {
       };
       this.resourceUri = vscode.Uri.file(migration.filePath);
     }
+  }
+}
+
+/** A leaf item showing migration detail (description or table name). */
+export class MigrationDetailItem extends vscode.TreeItem {
+  constructor(label: string, icon: vscode.ThemeIcon) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.iconPath = icon;
   }
 }
 
@@ -102,17 +113,28 @@ export class MigrationTreeViewProvider implements vscode.TreeDataProvider<vscode
   }
 
   getChildren(element?: vscode.TreeItem): vscode.ProviderResult<vscode.TreeItem[]> {
-    if (element) {
-      return [];
+    if (!element) {
+      if (this.items.length === 0) {
+        const msg = this._filterText
+          ? `"${this._filterText}" に一致するマイグレーションはありません`
+          : "Click refresh to load migrations";
+        return [new vscode.TreeItem(msg, vscode.TreeItemCollapsibleState.None)];
+      }
+      return this.items;
     }
 
-    if (this.items.length === 0) {
-      const msg = this._filterText
-        ? `"${this._filterText}" に一致するマイグレーションはありません`
-        : "Click refresh to load migrations";
-      return [new vscode.TreeItem(msg, vscode.TreeItemCollapsibleState.None)];
+    if (element instanceof MigrationTreeItem) {
+      const items: vscode.TreeItem[] = [];
+      const m = element.migration;
+      if (m.description) {
+        items.push(new MigrationDetailItem(m.description, new vscode.ThemeIcon("note")));
+      }
+      for (const table of m.tables) {
+        items.push(new MigrationDetailItem(table, new vscode.ThemeIcon("database")));
+      }
+      return items;
     }
 
-    return this.items;
+    return [];
   }
 }
