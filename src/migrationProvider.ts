@@ -19,6 +19,7 @@ export interface MigrationDefinition {
   status: MigrationStatus;
   description: string;
   filePath: string | undefined;
+  tables: string[];
 }
 
 export class MigrationProvider {
@@ -153,6 +154,7 @@ export class MigrationProvider {
           status: tableMatch[2].toLowerCase().includes("not") ? "not-migrated" : "migrated",
           description: tableMatch[3].trim(),
           filePath: undefined,
+          tables: [],
         });
         continue;
       }
@@ -166,6 +168,7 @@ export class MigrationProvider {
           status: plainMatch[2].toLowerCase().includes("not") ? "not-migrated" : "migrated",
           description: "",
           filePath: undefined,
+          tables: [],
         });
       }
     }
@@ -195,11 +198,49 @@ export class MigrationProvider {
           status: match[2].toLowerCase().includes("not") ? "not-migrated" : "migrated",
           description: match[3].trim(),
           filePath: undefined,
+          tables: [],
         });
       }
     }
 
     return migrations.length > 0 ? migrations : undefined;
+  }
+
+  /** Extract description and table names from a migration PHP file. */
+  private extractFileDetails(filePath: string): { description: string; tables: string[] } {
+    let content: string;
+    try {
+      content = fs.readFileSync(filePath, "utf-8");
+    } catch {
+      return { description: "", tables: [] };
+    }
+
+    const descMatch = content.match(
+      /function\s+getDescription\s*\(\)[^{]*\{[^}]*return\s+['"]([^'"]*)['"]\s*;/s
+    );
+    const description = descMatch?.[1] ?? "";
+
+    const tables = new Set<string>();
+
+    const sqlPattern = /\$this->addSql\(\s*['"](.+?)['"]\s*[,)]/gs;
+    let sqlMatch: RegExpExecArray | null;
+    while ((sqlMatch = sqlPattern.exec(content)) !== null) {
+      const sql = sqlMatch[1];
+      const tablePatterns = [
+        /(?:CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE)(?:\s+IF\s+(?:NOT\s+)?EXISTS)?\s+[`"']?(\w+)[`"']?/gi,
+        /(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+[`"']?(\w+)[`"']?/gi,
+        /RENAME\s+TABLE\s+[`"']?(\w+)[`"']?/gi,
+        /(?:CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX)\s+\S+\s+ON\s+[`"']?(\w+)[`"']?/gi,
+      ];
+      for (const pattern of tablePatterns) {
+        let m: RegExpExecArray | null;
+        while ((m = pattern.exec(sql)) !== null) {
+          tables.add(m[1]);
+        }
+      }
+    }
+
+    return { description, tables: [...tables] };
   }
 
   /** Extract the short version name (e.g. `Version20240101120000`) from an FQCN. */
@@ -230,6 +271,11 @@ export class MigrationProvider {
       const matchingFile = files.find((f) => f.includes(migration.version));
       if (matchingFile) {
         migration.filePath = path.join(migrationDir, matchingFile);
+        const details = this.extractFileDetails(migration.filePath);
+        migration.tables = details.tables;
+        if (details.description) {
+          migration.description = details.description;
+        }
       }
     }
   }

@@ -22,8 +22,11 @@ const STATUS_LABELS: Record<MigrationStatus, string> = {
 /** A tree item representing a single migration version. */
 export class MigrationTreeItem extends vscode.TreeItem {
   constructor(public readonly migration: MigrationDefinition) {
-    const desc = migration.description ? ` — ${migration.description}` : "";
-    super(`${migration.version}${desc}`, vscode.TreeItemCollapsibleState.None);
+    const hasChildren = !!migration.description || migration.tables.length > 0;
+    const state = hasChildren
+      ? vscode.TreeItemCollapsibleState.Collapsed
+      : vscode.TreeItemCollapsibleState.None;
+    super(migration.version, state);
 
     this.iconPath = STATUS_ICONS[migration.status];
     this.tooltip = `${migration.version}\nStatus: ${STATUS_LABELS[migration.status]}`;
@@ -37,6 +40,19 @@ export class MigrationTreeItem extends vscode.TreeItem {
       };
       this.resourceUri = vscode.Uri.file(migration.filePath);
     }
+  }
+}
+
+/** A leaf item showing migration detail (description or table name) with jump-to-line support. */
+export class MigrationDetailItem extends vscode.TreeItem {
+  constructor(label: string, icon: vscode.ThemeIcon, filePath: string, searchKeyword: string) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.iconPath = icon;
+    this.command = {
+      command: "symfony-routes.openMigrationDetail",
+      title: "Jump to Detail",
+      arguments: [filePath, searchKeyword],
+    };
   }
 }
 
@@ -69,7 +85,8 @@ export class MigrationTreeViewProvider implements vscode.TreeDataProvider<vscode
           const lower = this._filterText.toLowerCase();
           return (
             m.version.toLowerCase().includes(lower) ||
-            m.description.toLowerCase().includes(lower)
+            m.description.toLowerCase().includes(lower) ||
+            m.tables.some((t) => t.toLowerCase().includes(lower))
           );
         })
       : this.cachedMigrations;
@@ -102,17 +119,36 @@ export class MigrationTreeViewProvider implements vscode.TreeDataProvider<vscode
   }
 
   getChildren(element?: vscode.TreeItem): vscode.ProviderResult<vscode.TreeItem[]> {
-    if (element) {
-      return [];
+    if (!element) {
+      if (this.items.length === 0) {
+        const msg = this._filterText
+          ? `"${this._filterText}" に一致するマイグレーションはありません`
+          : "Click refresh to load migrations";
+        return [new vscode.TreeItem(msg, vscode.TreeItemCollapsibleState.None)];
+      }
+      return this.items;
     }
 
-    if (this.items.length === 0) {
-      const msg = this._filterText
-        ? `"${this._filterText}" に一致するマイグレーションはありません`
-        : "Click refresh to load migrations";
-      return [new vscode.TreeItem(msg, vscode.TreeItemCollapsibleState.None)];
+    if (element instanceof MigrationTreeItem) {
+      const items: vscode.TreeItem[] = [];
+      const m = element.migration;
+      if (m.description && m.filePath) {
+        items.push(new MigrationDetailItem(
+          m.description, new vscode.ThemeIcon("note"),
+          m.filePath, "getDescription"
+        ));
+      }
+      if (m.filePath) {
+        for (const table of m.tables) {
+          items.push(new MigrationDetailItem(
+            table, new vscode.ThemeIcon("database"),
+            m.filePath, table
+          ));
+        }
+      }
+      return items;
     }
 
-    return this.items;
+    return [];
   }
 }
