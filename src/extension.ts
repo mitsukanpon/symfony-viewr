@@ -43,6 +43,7 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     vscode.window.createTreeView("symfonyMigrationsView", {
       treeDataProvider: migrationTreeView,
+      showCollapseAll: true,
     }),
 
     // --- Route commands ---
@@ -76,6 +77,33 @@ export function activate(context: vscode.ExtensionContext) {
       (migration: { filePath?: string }) => {
         if (migration.filePath) {
           vscode.window.showTextDocument(vscode.Uri.file(migration.filePath));
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      "symfony-routes.openMigrationDetail",
+      async (filePath: string, searchKeyword: string) => {
+        const doc = await vscode.workspace.openTextDocument(filePath);
+        const editor = await vscode.window.showTextDocument(doc);
+        const text = doc.getText();
+        let idx = -1;
+        if (searchKeyword === "getDescription") {
+          idx = text.indexOf(searchKeyword);
+        } else {
+          const lines = text.split("\n");
+          let offset = 0;
+          for (const line of lines) {
+            if (line.includes("addSql") && line.includes(searchKeyword)) {
+              idx = offset + line.indexOf(searchKeyword);
+              break;
+            }
+            offset += line.length + 1;
+          }
+        }
+        if (idx >= 0) {
+          const pos = doc.positionAt(idx);
+          editor.selection = new vscode.Selection(pos, pos);
+          editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
         }
       }
     ),
@@ -160,9 +188,9 @@ export function activate(context: vscode.ExtensionContext) {
     // --- Search: Migrations ---
     vscode.commands.registerCommand("symfony-routes.searchMigrations", async () => {
       const input = await vscode.window.showInputBox({
-        prompt: "Search migrations (version / description)",
+        prompt: "Search migrations (version / description / table)",
         value: migrationTreeView.filterText,
-        placeHolder: "e.g. 20240101, Version",
+        placeHolder: "e.g. 20240101, Version, dtb_product",
       });
       if (input !== undefined) {
         migrationTreeView.setFilter(input);
